@@ -3,34 +3,40 @@
 ## Сутності та атрибути
 
 1. **User (Користувач)**
-   - `id` (int) [PK]
+   - `user_id` (int) [PK]
    - `username` (string) 
    - `email` (string)  
    - `subscription_type` (string) 
 
 2. **Artist (Виконавець)**
-   - `id` (int) [PK]
-   - `name` (string) 
+   - `artist_id` (int) [PK]
+   - `name` (string) [UK]
    - `bio` (string)  
    - `is_verified` (boolean) 
 
 3. **Album (Альбом)**
-   - `id` (int) [PK]
+   - `album_id` (int) [PK]
+   - `artist_id` (int) [FK]
    - `title` (string) 
    - `release_date` (date) 
    - `album_type` (string) 
 
 4. **Track (Трек)**
-   - `id` (int) [PK]
+   - `track_id` (int) [PK]
    - `title` (string)   
    - `duration_ms` (number)  
    - `is_explicit` (boolean) 
+   - `artis_id` (int) [FK]
+   - `album_id` (int) [FK]
+   - `release_date` (date) 
 
 5. **Playlist (Плейлист)**
-   - `id` (int) [PK]
-   - `title` (string)   
+   - `playlist_id` (int) [PK]
+   - `user_id` (int) [FK]
+   - `playlist_name` (string)   
    - `description` (string)   
    - `is_public` (boolean)  
+   - `created_at` (date) 
 
 
 ## Зв'язки
