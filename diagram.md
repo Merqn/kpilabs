@@ -1,3 +1,4 @@
+```mermaid 
 erDiagram
     %% Зв'язки
     Artist ||--o{ Album : "releases"
@@ -42,3 +43,4 @@ erDiagram
         string description
         boolean is_public
     }
+    ```
