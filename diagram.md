@@ -1,4 +1,4 @@
-```mermaid 
+```mermaid
 erDiagram
     
     Artist ||--o{ Album : "releases"
@@ -42,4 +42,4 @@ erDiagram
         string description
         boolean is_public
     }
-    ```
+```
