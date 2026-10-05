@@ -1,6 +1,6 @@
 ```mermaid 
 erDiagram
-    %% Зв'язки
+    
     Artist ||--o{ Album : "releases"
     Album ||--|{ Track : "contains"
     Artist }o--o{ Track : "collaborates on"
@@ -8,7 +8,6 @@ erDiagram
     Playlist }o--o{ Track : "includes"
     User }o--o{ Track : "likes"
 
-    %% Сутності та атрибути
     User {
         int id PK
         string username
