@@ -6,9 +6,9 @@ DEFENSE — Завдання 1: Домен і модель даних (ER)
 
 
 Топ-3 розбіжності (spec ↔ артефакт) + коміт-виправлення:
-•
-•
-•
+- в spec.md не вистачало 1 асоціативної сутності для треків в плейлисті (https://github.com/Merqn/kpilabs/commit/ebb83d7ae0a4f173f568af80990a7e61f76031dd)
+- додав важливі атрибути такі як: `artist_id` в Album; `artist_id`,`album_id`,`release_date` в Track; `playlist_id`,`user_id`,`playlist_name`,`created_at` в Playlist; (https://github.com/Merqn/kpilabs/commit/35d64870712ac67d5e26e9db03a0b1e20fc162f6)
+- 
 
 Ключове рішення — які альтернативи зважив і чому обрав цю (ADR):
 
