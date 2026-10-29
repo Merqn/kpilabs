@@ -1,0 +1,32 @@
+```plantuml
+@startuml
+left to right direction
+
+actor "Користувач" as User
+actor "Слухач" as Listener
+actor "Виконавець" as Artist
+
+User <|-- Listener
+User <|-- Artist
+
+rectangle "Музичний стримінговий сервіс" {
+  usecase "Знайти музику" as FindMusic
+  usecase "Слухати музику" as ListenMusic
+  usecase "Організувати особистий плейлист" as ManagePlaylist
+  usecase "Створити або обрати плейлист" as SelectPlaylist
+  usecase "Додати трек до плейлиста" as AddTrack
+  usecase "Вилучити трек із плейлиста" as RemoveTrack
+  usecase "Опублікувати музичний реліз" as PublishRelease
+}
+
+Listener --> FindMusic
+Listener --> ListenMusic
+Listener --> ManagePlaylist
+Artist --> PublishRelease
+
+ManagePlaylist ..> SelectPlaylist : <<include>>
+ManagePlaylist ..> AddTrack : <<include>>
+RemoveTrack ..> ManagePlaylist : <<extend>>
+
+@enduml
+```
