@@ -12,10 +12,9 @@ User <|-- Artist
 rectangle "Музичний стримінговий сервіс" {
   usecase "Знайти музику" as FindMusic
   usecase "Слухати музику" as ListenMusic
-  usecase "Організувати особистий плейлист" as ManagePlaylist
+  usecase "UC-02\nОрганізувати особистий плейлист" as ManagePlaylist
   usecase "Створити або обрати плейлист" as SelectPlaylist
   usecase "Додати трек до плейлиста" as AddTrack
-  usecase "Вилучити трек із плейлиста" as RemoveTrack
   usecase "Опублікувати музичний реліз" as PublishRelease
 }
 
@@ -26,7 +25,6 @@ Artist --> PublishRelease
 
 ManagePlaylist ..> SelectPlaylist : <<include>>
 ManagePlaylist ..> AddTrack : <<include>>
-RemoveTrack ..> ManagePlaylist : <<extend>>
 
 @enduml
 ```
