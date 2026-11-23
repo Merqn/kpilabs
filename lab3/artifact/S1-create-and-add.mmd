@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Listener as Слухач
+    participant API as PlaylistAPI
+    participant Auth as AuthService
+    participant Playlist as PlaylistService
+    participant Catalog as CatalogService
+    participant Repo as PlaylistRepository
+    participant DB as Database
+
+    Listener->>+API: createPlaylistAndAddTrack(name, trackId)
+    API->>+Auth: validateUser(session)
+    Auth-->>-API: userId
+
+    alt назва некоректна
+        API-->>Listener: 400 Invalid playlist name
+    else назва валідна
+        API->>+Playlist: createPlaylist(userId, name)
+        Playlist->>+Repo: createPlaylist(userId, name)
+        Repo->>+DB: INSERT Playlist
+        DB-->>-Repo: playlistId
+        Repo-->>-Playlist: playlistId
+
+        Playlist->>+Catalog: findTrack(trackId)
+        Catalog-->>-Playlist: trackExists
+
+        opt трек наявний
+            Playlist->>+Repo: addTrack(playlistId, trackId, position=1)
+            Repo->>+DB: BEGIN ACID transaction
+            DB->>DB: INSERT PlaylistTrack(..., 1)
+            DB-->>-Repo: PlaylistTrack
+            Repo-->>-Playlist: created
+            Playlist-->>-API: 201 playlist and track created
+        end
+    end
+    API-->>-Listener: result

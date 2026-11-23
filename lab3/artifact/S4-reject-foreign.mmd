@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Listener as Слухач
+    participant API as PlaylistAPI
+    participant Auth as AuthService
+    participant Playlist as PlaylistService
+    participant Catalog as CatalogService
+    participant Repo as PlaylistRepository
+
+    Listener->>+API: addTrack(foreignPlaylistId, trackId)
+    API->>+Auth: validateOwner(session, foreignPlaylistId)
+    Auth->>+Repo: getPlaylistOwner(foreignPlaylistId)
+    Repo-->>-Auth: ownerId
+    Auth-->>-API: forbidden
+
+    alt слухач не є власником
+        API-->>Listener: 403 Forbidden
+    else слухач є власником
+        API->>+Playlist: addTrack(foreignPlaylistId, trackId)
+        Playlist->>+Catalog: findTrack(trackId)
+        Catalog-->>-Playlist: trackExists
+        Playlist-->>-API: success
+        API-->>Listener: 201 Track added
+    end
+    deactivate API

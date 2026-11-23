@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    actor Listener as Слухач
+    participant API as PlaylistAPI
+    participant Auth as AuthService
+    participant Playlist as PlaylistService
+    participant Catalog as CatalogService
+    participant Repo as PlaylistRepository
+
+    Listener->>+API: addTrack(playlistId, missingTrackId)
+    API->>+Auth: validateOwner(session, playlistId)
+    Auth-->>-API: authorized
+
+    API->>+Playlist: addTrack(playlistId, missingTrackId)
+    Playlist->>+Catalog: findTrack(missingTrackId)
+    Catalog-->>-Playlist: trackNotFound
+
+    alt трек відсутній у каталозі
+        Playlist-->>API: missingTrack
+        API-->>Listener: 404 «Трек не знайдено»
+    else трек наявний
+        Playlist->>+Repo: addTrack(playlistId, missingTrackId)
+        Repo-->>-Playlist: created
+        Playlist-->>-API: success
+        API-->>Listener: 201 Track added
+    end
+    deactivate API

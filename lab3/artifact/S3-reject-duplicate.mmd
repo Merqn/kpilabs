@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    actor Listener as Слухач
+    participant API as PlaylistAPI
+    participant Auth as AuthService
+    participant Playlist as PlaylistService
+    participant Repo as PlaylistRepository
+    participant DB as Database
+
+    Listener->>+API: addTrack(playlistId, trackId)
+    API->>+Auth: validateOwner(session, playlistId)
+    Auth-->>-API: authorized
+
+    API->>+Playlist: checkAndAddTrack(playlistId, trackId)
+    Playlist->>+Repo: findPlaylistTrack(playlistId, trackId)
+    Repo->>+DB: SELECT by composite key
+    DB-->>-Repo: existingRecord
+    Repo-->>-Playlist: existingRecord
+
+    alt дублікат знайдено
+        Playlist-->>API: duplicate
+        API-->>Listener: 409 «Трек уже є у плейлісті»
+    else дублікат відсутній
+        Playlist->>+Repo: addTrack(playlistId, trackId)
+        Repo-->>-Playlist: created
+        Playlist-->>-API: 201
+        API-->>Listener: 201 Track added
+    end
+    deactivate API

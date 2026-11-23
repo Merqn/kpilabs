@@ -1,0 +1,44 @@
+sequenceDiagram
+    autonumber
+    actor Listener as Слухач
+    participant API as PlaylistAPI
+    participant Auth as AuthService
+    participant Playlist as PlaylistService
+    participant Catalog as CatalogService
+    participant Repo as PlaylistRepository
+    participant DB as Database
+
+    Listener->>+API: addTrack(playlistId, trackId)
+    API->>+Auth: validateOwner(session, playlistId)
+    Auth->>+Repo: findPlaylistOwner(playlistId)
+    Repo->>+DB: SELECT user_id FROM Playlist
+    DB-->>-Repo: ownerId
+    Repo-->>-Auth: ownerId
+    Auth-->>-API: authorized
+
+    API->>+Catalog: findTrack(trackId)
+    Catalog-->>-API: trackExists
+
+    alt трек не знайдено
+        API-->>Listener: 404 Track not found
+    else трек знайдено
+        API->>+Playlist: addTrack(playlistId, trackId)
+
+        Playlist->>+Repo: findPlaylistTracks(playlistId)
+        Repo->>+DB: SELECT tracks FROM PlaylistTrack
+        DB-->>-Repo: tracks
+        Repo-->>-Playlist: tracks
+
+        alt трек уже в плейлісті
+            Playlist-->>API: duplicate
+            API-->>Listener: 409 Track already exists
+        else трек новий
+            Playlist->>+Repo: addAtPosition(playlistId, trackId, max+1)
+            Repo->>+DB: BEGIN ACID transaction and INSERT
+            DB-->>-Repo: PlaylistTrack
+            Repo-->>-Playlist: position
+            Playlist-->>-API: 201 PlaylistTrack created
+            API-->>Listener: 201 Track added
+        end
+    end
+    deactivate API
