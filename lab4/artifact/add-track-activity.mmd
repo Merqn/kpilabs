@@ -1,0 +1,61 @@
+%%{init: {"flowchart": {"nodeSpacing": 25, "rankSpacing": 35}}}%%
+flowchart TB
+    U0((Початок))
+    U1["Слухач: вибрати P1/T2;<br/>надіслати addTrack(playlistId, trackId)"]
+    U2["Слухач: чекати HTTP-відповідь<br/>до дедлайну"]
+    U3{"Відповідь отримана вчасно?"}
+    U4{"HTTP status"}
+    U5["Слухач: показати успіх"]
+    U6["Слухач: показати причину відмови"]
+    U7["Слухач: показати<br/>«Результат невідомий»;<br/>не повторювати автоматично;<br/>оновити список перед ручним повтором"]
+    U8["Слухач: показати помилку сервісу;<br/>оновити список перед повтором"]
+    U9((Кінець))
+
+    A0(("PlaylistAPI:<br/>прийняти запит"))
+    A1{{"FORK: незалежні перевірки"}}
+    A2["AuthService:<br/>validateOwner; прочитати<br/>Playlist.user_id"]
+    A3["CatalogService:<br/>findTrack(track_id)"]
+    A4{{"JOIN: обидві перевірки завершені"}}
+    A5{"Результат перевірок?"}
+    A6["PlaylistService/Repository:<br/>BEGIN; перевірити дублікат<br/>і MAX(position)"]
+    A7{"Трек уже є?"}
+    A8["PlaylistService: rollback;<br/>підготувати 409"]
+    A9["PlaylistRepository:<br/>INSERT PlaylistTrack на<br/>MAX(position) + 1"]
+    A10{"INSERT пройшов обмеження унікальності?"}
+    A11["PlaylistService: commit;<br/>підготувати 201"]
+    A12["PlaylistAPI:<br/>надіслати HTTP-відповідь<br/>(status, message)"]
+    A13((Кінець серверного процесу))
+
+    U0 --> U1 --> U2 --> U3
+    U3 -->|так| U4
+    U3 -->|ні, тайм-аут| U7 --> U9
+    U4 -->|201| U5 --> U9
+    U4 -->|403, 404 або 409| U6 --> U9
+    U4 -->|5xx або інший статус| U8 --> U9
+
+    A0 --> A1
+    A1 --> A2 --> A4
+    A1 --> A3 --> A4
+    A4 --> A5
+    A5 -->|403: не власник, пріоритет| A12
+    A5 -->|404: власник, але трек відсутній| A12
+    A5 -->|обидві перевірки успішні| A6
+    A6 --> A7
+    A7 -->|так| A8 --> A12
+    A7 -->|ні| A9 --> A10
+    A10 -->|так| A11 --> A12
+    A10 -->|ні, конфлікт ключа| A8
+    A12 --> A13
+
+    U1 -. "Запит: addTrack(playlistId, trackId)" .-> A0
+    A12 -. "Відповідь: status, message" .-> U2
+
+    classDef event fill:#fff,stroke:#334155,stroke-width:2px,color:#111827
+    classDef gateway fill:#fff7cc,stroke:#9a6700,stroke-width:2px,color:#111827
+    classDef message fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,color:#111827
+    classDef forkjoin fill:#334155,stroke:#0f172a,stroke-width:2px,color:#fff
+
+    class U0,U9,A0,A13 event
+    class A5,A7,A10,U3,U4 gateway
+    class U1,U2,A12 message
+    class A1,A4 forkjoin
