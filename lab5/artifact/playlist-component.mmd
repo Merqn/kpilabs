@@ -1,0 +1,36 @@
+%%{init: {"flowchart": {"nodeSpacing": 35, "rankSpacing": 45}}}%%
+flowchart TB
+    Listener([Слухач]):::actor
+    IdentityProvider["External Identity Provider<br/>provides IIdentityProvider<br/>OIDC"]:::external
+
+    subgraph SYSTEM["Playlist Platform — межа системи"]
+        direction TB
+        UI["Web / Mobile UI<br/>requires IPlaylistAPI"]:::component
+        API["PlaylistAPI<br/>provides IPlaylistAPI<br/>requires IAuthService, ICatalogLookup,<br/>IPlaylistUseCases"]:::component
+        Auth["AuthService<br/>provides IAuthService<br/>requires IIdentityProvider, IPlaylistRepository"]:::component
+        Playlist["PlaylistService<br/>provides IPlaylistUseCases<br/>requires IPlaylistRepository,<br/>ICatalogLookup"]:::component
+        Catalog["CatalogService<br/>provides ICatalogLookup<br/>requires ITrackRepository"]:::component
+        PlaylistRepo["PlaylistRepository<br/>provides IPlaylistRepository<br/>requires IRelationalStore"]:::component
+        TrackRepo["TrackRepository<br/>provides ITrackRepository<br/>requires IRelationalStore"]:::component
+        DB[("Relational Database<br/>provides IRelationalStore<br/>User, Artist, Album, Track,<br/>Playlist, PlaylistTrack<br/>ACID transactions<br/>FK: Playlist.user_id,<br/>PlaylistTrack IDs<br/>UNIQUE(playlist_id, track_id)")]:::database
+
+        UI -->|"requires IPlaylistAPI: HTTPS/JSON<br/>createPlaylist, addTrack"| API
+        API -->|"requires IAuthService:<br/>validateSession, validateOwner"| Auth
+        API -->|"requires ICatalogLookup: findTrack(trackId)<br/>[S2]"| Catalog
+        API -->|"requires IPlaylistUseCases:<br/>createPlaylist, addTrack"| Playlist
+        Auth -->|"requires IPlaylistRepository:<br/>getPlaylistOwner"| PlaylistRepo
+        Playlist -->|"requires IPlaylistRepository:<br/>createPlaylist, findByKey,<br/>addAtPosition"| PlaylistRepo
+        Playlist -->|"requires ICatalogLookup: findTrack(trackId)<br/>[S1/S5]"| Catalog
+        Catalog -->|"requires ITrackRepository:<br/>findTrackById(trackId)"| TrackRepo
+        PlaylistRepo -->|"requires IRelationalStore:<br/>queries, ACID transactions"| DB
+        TrackRepo -->|"requires IRelationalStore:<br/>query Track"| DB
+    end
+
+    Listener -->|"uses"| UI
+    Auth -.->|"IIdentityProvider:<br/>validate identity token via OIDC"| IdentityProvider
+
+    classDef actor fill:#fff,stroke:#334155,stroke-width:2px,color:#111827
+    classDef component fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,color:#111827
+    classDef external fill:#fef3c7,stroke:#a16207,stroke-width:2px,color:#111827
+    classDef database fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#111827
+    style SYSTEM fill:#f8fafc,stroke:#334155,stroke-width:2px
